@@ -55,56 +55,19 @@ def dowload_url (url, fileName):
     #print url
     ads_data = urllib2.urlopen(url)
 
-    # Get the URL. This gets the real URL.
-    #print "The URL is: ", ads_data.geturl()
-
-    # Getting the code
-    #print "This gets the code: ", ads_data.code
-
-    # Get the Headers.
-    # This returns a dictionary-like object that describes the page fetched,
-    # particularly the headers sent by the server
-    #print "The Headers are: ", ads_data.info()
-
-    # Get the date part of the header
-    #print "The Date is: ", ads_data.info()['date']
-
-    # Get the server part of the header
-    #print "The Server is: ", ads_data.info()['server']
-
     # Get all data
     print "Retrieving data from ADS..."
     html = ads_data.read()
-    #print "Get all data: ", html
-
-    # Get only the length
-    #print "Get the length :", len(html)
-
-    # Note that the rstrip strips the trailing newlines and carriage returns before
-    # printing the output.
-
-    # fileName to be written to
-
-
-
 
     #open the fileName for writing
     print "Writing file " + fileName
     fh = open(fileName, "w")
 
-    # read from request while writing to fileName
-    # Showing that the fileName object is iterable
     fh.write(html)
 
-
-
-    # You can also use the with statement:
-    #with open(fileName, 'w') as f: f.write(ads_data.read())
     fh.close()
 
     print "Finished"
-
-
 
 ##
 ##    start main program
