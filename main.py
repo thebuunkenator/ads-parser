@@ -13,7 +13,6 @@ def add_authors (record, article):
         tmpAuthor = item.text.encode('utf-8')
         article.add_author(tmpAuthor)
 
-
 ## Parse XML
 def parse_xml (fileName):
 
@@ -47,7 +46,7 @@ def parse_xml (fileName):
         add_authors (record, curArticle)
 
         if citation_url != "":
-            print "retrieveing citations for " + curBibcode
+            #print "retrieveing citations for " + curBibcode
             citation_url = citation_url + "&data_type=XML"
             citationsFileName = curBibcode + ".xml"
             # TODO: de volgende weer aan zetten als de citations weer gedownload
@@ -59,7 +58,7 @@ def parse_xml (fileName):
 
 
         else:
-            print "no citations for " + curBibcode
+            #print "no citations for " + curBibcode
             curArticle.num_citations = 0
 
         author_articles.append(curArticle)
@@ -74,12 +73,12 @@ def parse_xml (fileName):
 ##
 
 def get_num_citations(fileName):
-        print "getting number of citations form XML: " + fileName
+        #print "getting number of citations form XML: " + fileName
         tree = ET.parse(xml_path + fileName)
         root = tree.getroot()
 
         number_of_citations = root.attrib.get('retrieved')
-        print number_of_citations
+        #print number_of_citations
 
         # print "retrieving authors in citation"
         # for record in root:
@@ -91,20 +90,20 @@ def get_num_citations(fileName):
 
 
 def update_citations():
-    print "updating citations"
+    #print "updating citations"
     for article in author_articles: #loop door artikelen
 
         if article.num_citations>0:
 
             fileName = article.bibcode + ".xml"
-            print "getting citations form XML: " + fileName
+            #print "getting citations form XML: " + fileName
             tree = ET.parse(xml_path + fileName)
             root = tree.getroot()
 
-            print "retrieving authors in citations"
+            # print "retrieving authors in citations"
             for record in root: #loop door citation artikelen
-                tmpTitle = (record, namespace + 'title')
-                tmpBibcode = (record, namespace + 'bibcode')
+                tmpTitle = xml_value(record, namespace + 'title')
+                tmpBibcode = xml_value(record, namespace + 'bibcode')
                 citationArticle = Article (tmpBibcode, tmpTitle, "")
 
                 authors = record.findall(namespace + 'author')
@@ -113,6 +112,39 @@ def update_citations():
 
                 article.add_citation(citationArticle)
 
+
+def update_citation_count(authorToFind):
+    print "updating citation counts for author" + authorToFind
+
+    for article in author_articles: #loop door artikelen
+        numCitations = article.num_citations
+        if numCitations>0:
+            #print numCitations
+            for citation in article.citations: # loop door citaties van dit artikel
+                for author in citation.authors: # loop door auteurs bij citaties van dit artikel
+                    if author == authorToFind:
+                        #print"self reference found"
+                        numCitations = numCitations - 1
+            #update citations
+            #print numCitations
+        article.num_citations_no_author = numCitations
+
+def update_citation_count_all():
+    print "TODO: Fix: updating citation counts for all authors"
+
+    for article in author_articles: #loop door artikelen
+        found = False
+        numCitations = article.num_citations
+        #print numCitations
+        for article_authors in article.authors: # loop door auteurs bij artikelen
+            for citation in article.citations: # loop door citaties van dit artikel
+                for author in citation.authors: # loop door auteurs bij citaties van dit artikel
+                    if author == article_authors:
+                        #print"self reference found"
+                        found=True
+            if found==True:
+                numCitations=numCitations - 1
+        article.num_citations_no_all_authors = numCitations
 
 
 ##
@@ -157,6 +189,8 @@ fileName = "adw.xml"
 parse_xml(fileName)
 print"--------------------------"
 update_citations()
+update_citation_count('de Mink, S. E.')
+update_citation_count_all()
 
 for article in author_articles:
     article.show()

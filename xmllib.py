@@ -5,10 +5,10 @@ namespace = "{http://ads.harvard.edu/schema/abs/1.1/abstracts}"
 def xml_value (record, parameter):
     if record.find(parameter) != None:
         value = record.find(parameter).text.encode('utf-8')
-        print parameter + ": "  + value
+        #print parameter + ": "  + value
         return value
     else:
-        print parameter + ": not found."
+        #print parameter + ": not found."
         return ""
 
 

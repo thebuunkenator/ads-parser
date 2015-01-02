@@ -19,16 +19,24 @@ class Article:
     def show(self):
         print "bibcode:                  " + self.bibcode
         print "title:                    " + self.title
-        print "citation URL:             " + self.citation_url
-        print "authors:"
-        for author in self.authors:
-            print "\t" + author
+        # print "citation URL:             " + self.citation_url
+        # print "authors:"
+        # for author in self.authors:
+        #     print "\t" + author
         print "#citations:               " + str(self.num_citations)
         print "#citations (excl author): " + str(self.num_citations_no_author)
         print "#citations (excl all):    " + str(self.num_citations_no_all_authors)
-        # for cite in citations:
-            # print cite.title
         print "#citation objects:        " + str(len(self.citations))
+        # for curCitation in self.citations:
+        #     curCitation.showSimple()
+        print "---------------------------------"
+
+    def showSimple(self):
+        print "bibcode:                  " + str(self.bibcode)
+        print "title:                    " + str(self.title)
+        print "authors:"
+        for author in self.authors:
+            print "\t" + author
         print "---------------------------------"
 
 
