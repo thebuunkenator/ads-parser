@@ -1,37 +1,25 @@
 import urllib
 import urllib2
-import xml.etree.ElementTree as ET
 
+from files import *
+from xmllib import *
+from Article import *
 
-bibcodes=[]
-titles = []
-citation_urls =[]
-num_citations = []
+author_articles = []
 
-##
-## XML functions
-##
+def add_authors (record, article):
 
-def xml_value (record, parameter):
-    if record.find(parameter) != None:
-        value = record.find(parameter).text.encode('utf-8')
-        print parameter + ": "  + value
-        return value
-    else:
-        print parameter + ": not found."
-        return ""
+    for item in record.iter('author'):
+        tmpAuthor = item.text.encode('utf-8')
+        article.add_author(tmpAuthor)
 
-def xml_multiple_values (record, parameter):
-    print parameter + 's:'
-    for item in record.iter(parameter):
-        print "\t" + item.text.encode('utf-8')
 
 ## Parse XML
 def parse_xml (fileName):
 
     print
     print "Parsing XML: " + fileName
-    tree = ET.parse(fileName)
+    tree = ET.parse(xml_path + fileName)
     root = tree.getroot()
 
 
@@ -39,23 +27,13 @@ def parse_xml (fileName):
     #print root.attrib
 
     for record in root:
-
-        print
-        titles.append(xml_value(record, 'title'))
-        bibcodes.append(xml_value(record, 'bibcode'))
+        # print
+        curTitle= xml_value(record, 'title')
+        curBibcode= xml_value(record, 'bibcode')
         citation_url =""
         #print record.attrib
 
-        #xml_value(record, 'affiliation')
-        #xml_value(record, 'journal')
-        #xml_value(record, 'volume')
-        #xml_value(record, 'pubdate')
-        #xml_value(record, 'page')
-        #xml_value(record, 'url')
-        #xml_value(record, 'score')
-        #xml_value(record, 'citations')
 
-        #xml_multiple_values(record, 'author')
         #xml_multiple_values(record, 'keyword')
         for item in record.iter('link'):
             #print item.attrib
@@ -63,68 +41,78 @@ def parse_xml (fileName):
                 #print "citation found!"
                 citation_url = xml_value(item, 'url')
 
-        citation_urls.append(citation_url)
+        #citation_urls.append(citation_url)
 
+        curArticle = Article(curBibcode, curTitle, citation_url)
+        add_authors (record, curArticle)
+
+        if citation_url != "":
+            print "retrieveing citations for " + curBibcode
+            citation_url = citation_url + "&data_type=XML"
+            citationsFileName = curBibcode + ".xml"
+            # TODO: de volgende weer aan zetten als de citations weer gedownload
+            # moeten worden
+            #dowload_url(citation_url, citationsFileName)
+
+            curArticle.num_citations = get_num_citations(citationsFileName)
+
+
+
+        else:
+            print "no citations for " + curBibcode
+            curArticle.num_citations = 0
+
+        author_articles.append(curArticle)
 ##
 ## File functions
 ##
 
 ## download URL
-def dowload_url (url, fileName):
-
-    #print url
-    ads_data = urllib2.urlopen(url)
-
-    # Get all data
-    #print "Retrieving data from ADS..."
-    html = ads_data.read()
-
-    #open the fileName for writing
-    print "Writing file " + fileName
-    fh = open(fileName, "w")
-
-    fh.write(html)
-
-    fh.close()
-
-    #print "Finished"
 
 ##
 ## Abstract functions
 ##
 
 def get_num_citations(fileName):
-        print
-        print "getting citations form XML: " + fileName
-        tree = ET.parse(fileName)
+        print "getting number of citations form XML: " + fileName
+        tree = ET.parse(xml_path + fileName)
         root = tree.getroot()
-
-
-        #print root.tag
-        #print root.attrib
 
         number_of_citations = root.attrib.get('retrieved')
         print number_of_citations
 
+        # print "retrieving authors in citation"
+        # for record in root:
+        #     print(xml_value(record, 'title'))
+        #     xml_multiple_values(record, 'author')
+
         return int(number_of_citations)
 
 
-def get_citations():
-    i=0
-    for url in citation_urls:
-        #print url
-        if url != "":
-            print "retrieveing citations for " + bibcodes[i]
-            url = url + "&data_type=XML"
-            citationsFileName = "file" + str(i) + ".xml"
-            #TODO: de volgende weerk aan zetten als we weer verder gaan
-            #dowload_url(url, citationsFileName)
 
-            num_citations.append(get_num_citations(citationsFileName))
-        else:
-            print "no citations for " + bibcodes[i]
-            num_citations.append(0)
-        i=i+1
+def update_citations():
+    print "updating citations"
+    for article in author_articles: #loop door artikelen
+
+        if article.num_citations>0:
+
+            fileName = article.bibcode + ".xml"
+            print "getting citations form XML: " + fileName
+            tree = ET.parse(xml_path + fileName)
+            root = tree.getroot()
+
+            print "retrieving authors in citations"
+            for record in root: #loop door citation artikelen
+                tmpTitle = (record, namespace + 'title')
+                tmpBibcode = (record, namespace + 'bibcode')
+                citationArticle = Article (tmpBibcode, tmpTitle, "")
+
+                authors = record.findall(namespace + 'author')
+                for author in authors:
+                    citationArticle.add_author(author.text.encode('utf-8'))
+
+                article.add_citation(citationArticle)
+
 
 
 ##
@@ -167,12 +155,11 @@ fileName = "adw.xml"
 #dowload_url (url, fileName)
 
 parse_xml(fileName)
+print"--------------------------"
+update_citations()
 
-get_citations()
-
-print bibcodes
-print num_citations
-
+for article in author_articles:
+    article.show()
 
 #voor 2e ronde
 # article_sel=YES
