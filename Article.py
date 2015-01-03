@@ -1,5 +1,6 @@
 class Article:
-
+    """ Article class
+    Uses reference to array of citations of type Article """
     def __init__(self, bibcode, title, citation_url):
         self.bibcode = bibcode
         self.title = title
@@ -20,24 +21,27 @@ class Article:
         print "bibcode:                  " + self.bibcode
         print "title:                    " + self.title
         # print "citation URL:             " + self.citation_url
-        # print "authors:"
+        print "authors:"
+        print self.authors
         # for author in self.authors:
         #     print "\t" + author
         print "#citations:               " + str(self.num_citations)
         print "#citations (excl author): " + str(self.num_citations_no_author)
         print "#citations (excl all):    " + str(self.num_citations_no_all_authors)
-        print "#citation objects:        " + str(len(self.citations))
+        # print "#citation objects:        " + str(len(self.citations))
+        # i = 1
         # for curCitation in self.citations:
+        #     print "citation " + str(i) + ": "
         #     curCitation.showSimple()
+        #     i = i + 1
         print "---------------------------------"
 
     def showSimple(self):
-        print "bibcode:                  " + str(self.bibcode)
-        print "title:                    " + str(self.title)
-        print "authors:"
-        for author in self.authors:
-            print "\t" + author
-        print "---------------------------------"
+        print "\tbibcode:                  " + str(self.bibcode)
+        #print "title:                    " + str(self.title)
+        print "\tauthors:"
+        print self.authors
+        print "\t---------------------------------"
 
 
 #toekomstige parameters

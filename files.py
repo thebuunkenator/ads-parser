@@ -1,23 +1,30 @@
 import urllib
 import urllib2
 
-xml_path = "./xml/"
+#Constants
+REFRESH = True # if set to False: do not  download files (if they are already downloaded)
+XML_PATH = "./xml/"
 
 def dowload_url (url, fileName):
+    """Downloads URL into a local file"""
 
-    #print url
-    ads_data = urllib2.urlopen(url)
+    if REFRESH == True:
+        #TODO: check if directory exists and if not create it
+        ads_data = urllib2.urlopen(url)
 
-    # Get all data
-    #print "Retrieving data from ADS..."
-    html = ads_data.read()
+        # Get all data
+        #print "Retrieving data from ADS"
+        print ">>> Downloading: " + url
+        html = ads_data.read()
 
-    #open the fileName for writing
-    print "Writing file " + fileName
-    fh = open(xml_path + fileName, "w")
+        #open the fileName for writing
+        #print "Writing file " + XML_PATH + fileName
+        fh = open(XML_PATH + fileName, "w")
 
-    fh.write(html)
+        fh.write(html)
 
-    fh.close()
+        fh.close()
 
-    #print "Finished"
+        #print "Finished"
+    else:
+        print ">>> Skipping download: " + url
