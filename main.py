@@ -145,6 +145,7 @@ def update_citation_count_all():
         article.num_citations_no_all_authors = numCitations
 
 def main_xml():
+    print "Downloading articles for " + AUTHOR
     baseURL = "http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel=nucl-ex&arxiv_sel=nucl-th&arxiv_sel=physics&arxiv_sel=quant-ph&arxiv_sel=q-bio&sim_query=YES&ned_query=YES&adsobj_query=YES&aut_logic=OR&obj_logic=OR&object=&start_mon=&ttl_logic=OR&title=&txt_logic=OR&text=&start_nr=1&ref_stems=&data_and=ALL&group_and=ALL&start_entry_day=&start_entry_mon=&start_entry_year=&end_entry_day=&end_entry_mon=&end_entry_year=&min_score=&aut_syn=YES&ttl_syn=YES&txt_syn=YES&aut_wt=1.0&obj_wt=1.0&ttl_wt=0.3&txt_wt=3.0&aut_wgt=YES&obj_wgt=YES&ttl_wgt=YES&txt_wgt=YES&ttl_sco=YES&txt_sco=YES&version=1"
 
     parameters = {
@@ -178,6 +179,7 @@ def main_xml():
     parse_xml(fileName)
 
 def manage_citations():
+    print "Manage citations"
     update_citations()
     update_citation_count(AUTHOR)
     update_citation_count_all()
@@ -221,10 +223,10 @@ def download_year(year):
 def calculate_rankings(year):
     fileName = str(year) + ".xml"
 
-    print "Parsing XML: " + fileName
+    #print "Parsing XML: " + fileName
     tree = ET.parse(XML_PATH + fileName)
     root = tree.getroot()
-    print root.attrib
+    #print root.attrib
 
     #get selected attribute from root
     total_in_year = root.attrib.get('selected')
@@ -237,6 +239,7 @@ def calculate_rankings(year):
 
 
 def manage_ranking():
+    print "Manage rankings"
     min_year = 999999;
     max_year = 0;
     for article in author_articles:
@@ -265,9 +268,33 @@ def manage_ranking():
             article.percentiel = objRank.percentiel
             article.total_in_year = objRank.total
     #rankings.show()
-##
+
+def save():
+    fileName = XML_PATH + "article_export" + ".txt"
+    print "Saving file to " + fileName
+    fh = open(fileName, "w")
+
+    for article in author_articles:
+        fh.write ("Bibcode:                  %s\n" % article.bibcode)
+        fh.write ("Title:                    %s\n" % article.title)
+        fh.write ("Publication date:         %s\n" % article.pub_date)
+        fh.write ("Citations:                %i\n" % article.num_citations)
+        fh.write ("Citations (excl author):  %i\n" % article.num_citations_no_author)
+        fh.write ("Citations (excl all):     %i\n" % article.num_citations_no_all_authors)
+        fh.write ("Ranking in year:          %i\n" % article.ranking)
+        fh.write ("Total in year:            %i\n" % article.total_in_year)
+        fh.write ("Percentile in year:       %f\n" % article.percentiel)
+        fh.write ("\n")
+        fh.write ("---------------------------------\n")
+        fh.write ("\n")
+
+    fh.close()
+
+
+## ------------------------
 ##    start main program
-##
+## ------------------------
+
 # download main XML with abstracts from author
 main_xml()
 
@@ -276,9 +303,9 @@ manage_citations()
 
 # Step 2: manage rankings
 manage_ranking()
-#voor 2e ronde
 
+save()
 
 # print articles
-for article in author_articles:
-    article.show()
+# for article in author_articles:
+#     article.show()

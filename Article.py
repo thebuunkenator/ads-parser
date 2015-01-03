@@ -54,15 +54,3 @@ class Article:
 
     def getYear(self):
         return int(self.pub_date[-4:])
-
-    #def save(fileName):
-    #   ##save filename
-#toekomstige parameters
-
-    #xml_value(record, 'affiliation')
-    #xml_value(record, 'journal')
-    #xml_value(record, 'volume')
-    #xml_value(record, 'page')
-    #xml_value(record, 'url')
-    #xml_value(record, 'score')
-    #xml_value(record, 'citations')

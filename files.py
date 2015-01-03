@@ -14,7 +14,7 @@ def dowload_url (url, fileName):
 
         # Get all data
         #print "Retrieving data from ADS"
-        print ">>> Downloading: " + url
+        # print ">>> Downloading: " + url
         html = ads_data.read()
 
         #open the fileName for writing
@@ -26,5 +26,5 @@ def dowload_url (url, fileName):
         fh.close()
 
         #print "Finished"
-    else:
-        print ">>> Skipping download: " + url
+    #else:
+    #    print ">>> Skipping download: " + url
