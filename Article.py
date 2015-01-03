@@ -10,6 +10,10 @@ class Article:
         self.num_citations = 0
         self.num_citations_no_author =0
         self.num_citations_no_all_authors = 0
+        self.pub_date = ""
+        self.ranking = 0
+        self.total_in_year = 0
+        self.percentiel = 0.0
 
     def add_author(self, author_name):
         self.authors.append (author_name)
@@ -20,6 +24,8 @@ class Article:
     def show(self):
         print "bibcode:                  " + self.bibcode
         print "title:                    " + self.title
+        print "Publication date:         " + self.pub_date
+        print "Year:                     " + str(self.getYear())
         # print "citation URL:             " + self.citation_url
         print "authors:"
         print self.authors
@@ -28,6 +34,9 @@ class Article:
         print "#citations:               " + str(self.num_citations)
         print "#citations (excl author): " + str(self.num_citations_no_author)
         print "#citations (excl all):    " + str(self.num_citations_no_all_authors)
+        print "ranking in year:          " + str(self.ranking)
+        print "total in year:            " + str(self.total_in_year)
+        print "percentiel in year:       " + str(self.percentiel)
         # print "#citation objects:        " + str(len(self.citations))
         # i = 1
         # for curCitation in self.citations:
@@ -43,13 +52,16 @@ class Article:
         print self.authors
         print "\t---------------------------------"
 
+    def getYear(self):
+        return int(self.pub_date[-4:])
 
+    #def save(fileName):
+    #   ##save filename
 #toekomstige parameters
 
     #xml_value(record, 'affiliation')
     #xml_value(record, 'journal')
     #xml_value(record, 'volume')
-    #xml_value(record, 'pubdate')
     #xml_value(record, 'page')
     #xml_value(record, 'url')
     #xml_value(record, 'score')

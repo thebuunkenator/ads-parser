@@ -2,7 +2,7 @@ import urllib
 import urllib2
 
 #Constants
-REFRESH = True # if set to False: do not  download files (if they are already downloaded)
+REFRESH = False # if set to False: do not  download files (if they are already downloaded)
 XML_PATH = "./xml/"
 
 def dowload_url (url, fileName):

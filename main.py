@@ -4,6 +4,7 @@ import urllib2
 from files import *
 from xmllib import *
 from Article import *
+from Ranking import *
 
 #constants
 NAMESPACE = "{http://ads.harvard.edu/schema/abs/1.1/abstracts}"
@@ -12,6 +13,7 @@ AUTHOR = 'de Mink, S. E.'
 
 # global list of articles
 author_articles = []
+rankings = Rankings() #Rankings consist of an array of Ranking objects
 
 def add_authors (record, article):
     """Loops through authors  of the record and adds them to the article """
@@ -34,8 +36,9 @@ def parse_xml (fileName):
 
         curBibcode= xml_value(record, NAMESPACE + 'bibcode')
         print "Article " + str(i) + " :" +curBibcode
-        citation_url =""
+        curPubDate= xml_value(record, NAMESPACE + 'pubdate')
 
+        citation_url =""
         for item in record.iter(NAMESPACE + 'link'):
             if item.attrib.get('type')=='CITATIONS':
                 #print "citations found!"
@@ -44,6 +47,7 @@ def parse_xml (fileName):
         #citation_urls.append(citation_url)
 
         curArticle = Article(curBibcode, curTitle, citation_url)
+        curArticle.pub_date = curPubDate
         add_authors (record, curArticle)
 
         if citation_url != "":
@@ -140,55 +144,141 @@ def update_citation_count_all():
 
         article.num_citations_no_all_authors = numCitations
 
+def main_xml():
+    baseURL = "http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel=nucl-ex&arxiv_sel=nucl-th&arxiv_sel=physics&arxiv_sel=quant-ph&arxiv_sel=q-bio&sim_query=YES&ned_query=YES&adsobj_query=YES&aut_logic=OR&obj_logic=OR&object=&start_mon=&ttl_logic=OR&title=&txt_logic=OR&text=&start_nr=1&ref_stems=&data_and=ALL&group_and=ALL&start_entry_day=&start_entry_mon=&start_entry_year=&end_entry_day=&end_entry_mon=&end_entry_year=&min_score=&aut_syn=YES&ttl_syn=YES&txt_syn=YES&aut_wt=1.0&obj_wt=1.0&ttl_wt=0.3&txt_wt=3.0&aut_wgt=YES&obj_wgt=YES&ttl_wgt=YES&txt_wgt=YES&ttl_sco=YES&txt_sco=YES&version=1"
 
+    parameters = {
+        "author" : "",
+        "data_type" : "",
+        "start_year" : "",
+        "end_year" : "",
+        "nr_to_return" : "",
+        "query_type" : "",
+        "article_sel" : "",
+        "jou_pick": "",
+        "sort": ""
+    }
+
+
+
+    parameters['author'] = AUTHOR
+    parameters['nr_to_return'] = 1000
+    parameters['data_type'] = "XML"
+    parameters['jou_pick'] = "ALL"
+    parameters['sort'] = "SCORE"
+
+
+    url = baseURL + "&" + urllib.urlencode(parameters)
+    #print url
+
+    fileName = "adw.xml"
+
+    dowload_url (url, fileName)
+
+    parse_xml(fileName)
+
+def manage_citations():
+    update_citations()
+    update_citation_count(AUTHOR)
+    update_citation_count_all()
+
+
+def download_year(year):
+    baseURL = "http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel=nucl-ex&arxiv_sel=nucl-th&arxiv_sel=physics&arxiv_sel=quant-ph&arxiv_sel=q-bio&sim_query=YES&ned_query=YES&adsobj_query=YES&aut_logic=OR&obj_logic=OR&object=&ttl_logic=OR&title=&txt_logic=OR&text=&start_nr=1&ref_stems=&data_and=ALL&group_and=ALL&start_entry_day=&start_entry_mon=&start_entry_year=&end_entry_day=&end_entry_mon=&end_entry_year=&min_score=&aut_syn=YES&ttl_syn=YES&txt_syn=YES&aut_wt=1.0&obj_wt=1.0&ttl_wt=0.3&txt_wt=3.0&aut_wgt=YES&obj_wgt=YES&ttl_wgt=YES&txt_wgt=YES&ttl_sco=YES&txt_sco=YES&version=1"
+
+    parameters = {
+        "author" : "",
+        "data_type" : "",
+        "start_year" : "",
+        "start_mon" :"",
+        "end_mon": "",
+        "end_year" : "",
+        "nr_to_return" : "",
+        "article_sel" : "",
+        "jou_pick": "",
+        "sort": "",
+        "data_type:" : ""
+
+    }
+
+
+    parameters['start_year'] = year
+    parameters['end_year'] = year
+    parameters['nr_to_return'] = 1000
+    parameters['article_sel'] = "YES"
+    parameters['jou_pick'] = "NO"
+    parameters['sort'] = "CITATIONS"
+    parameters['data_type'] = "XML"
+
+    print "downloading : " + str(year)
+    url = baseURL + "&" + urllib.urlencode(parameters)
+    #print url
+
+    fileName = str(year) + ".xml"
+
+    dowload_url (url, fileName)
+
+def calculate_rankings(year):
+    fileName = str(year) + ".xml"
+
+    print "Parsing XML: " + fileName
+    tree = ET.parse(XML_PATH + fileName)
+    root = tree.getroot()
+    print root.attrib
+
+    #get selected attribute from root
+    total_in_year = root.attrib.get('selected')
+    ranking=0
+    for record in root:
+        ranking += 1
+        curBibcode= xml_value(record, NAMESPACE + 'bibcode')
+        #print "Adding: "  + str(ranking), str(year), total_in_year, curBibcode
+        rankings.add(curBibcode, year, ranking, total_in_year)
+
+
+def manage_ranking():
+    min_year = 999999;
+    max_year = 0;
+    for article in author_articles:
+        tmpYear = article.getYear()
+        if tmpYear > max_year:
+            max_year =  tmpYear
+        if tmpYear < min_year:
+            min_year = tmpYear
+
+    #print "Year range: ["  + str(min_year) + ", " + str(max_year) + "]"
+
+    # download xml from ads website
+    for year in range (min_year, max_year):
+        download_year(year)
+
+    # create rankings table
+    for year in range (min_year, max_year):
+        calculate_rankings(year)
+
+    # update article with ranking
+    # TODO: uses 2 loops which is not very efficient
+    for article in author_articles:
+        objRank = rankings.getRankingObj(article.bibcode)
+        if objRank != None:
+            article.ranking = objRank.ranking
+            article.percentiel = objRank.percentiel
+            article.total_in_year = objRank.total
+    #rankings.show()
 ##
 ##    start main program
 ##
+# download main XML with abstracts from author
+main_xml()
 
-# Split base url form paramaters
-# parameters can be changed according to the step in the proces
-baseURL = "http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel=nucl-ex&arxiv_sel=nucl-th&arxiv_sel=physics&arxiv_sel=quant-ph&arxiv_sel=q-bio&sim_query=YES&ned_query=YES&adsobj_query=YES&aut_logic=OR&obj_logic=OR&object=&start_mon=&ttl_logic=OR&title=&txt_logic=OR&text=&start_nr=1&ref_stems=&data_and=ALL&group_and=ALL&start_entry_day=&start_entry_mon=&start_entry_year=&end_entry_day=&end_entry_mon=&end_entry_year=&min_score=&aut_syn=YES&ttl_syn=YES&txt_syn=YES&aut_wt=1.0&obj_wt=1.0&ttl_wt=0.3&txt_wt=3.0&aut_wgt=YES&obj_wgt=YES&ttl_wgt=YES&txt_wgt=YES&ttl_sco=YES&txt_sco=YES&version=1"
+# Step 1: manage citation count
+manage_citations()
 
-parameters = {
-    "author" : "",
-    "data_type" : "",
-    "start_year" : "",
-    "end_year" : "",
-    "nr_to_return" : "",
-    "query_type" : "",
-    "article_sel" : "",
-    "jou_pick": "",
-    "sort": ""
-}
+# Step 2: manage rankings
+manage_ranking()
+#voor 2e ronde
 
-
-
-parameters['author'] = AUTHOR
-parameters['nr_to_return'] = 1000
-parameters['data_type'] = "XML"
-parameters['jou_pick'] = "ALL"
-parameters['sort'] = "SCORE"
-#parameters['start_year'] =2012
-#parameters['end_year'] =2012
-#parameters['query_type'] = "CITES"
-
-url = baseURL + "&" + urllib.urlencode(parameters)
-#print url
-
-fileName = "adw.xml"
-
-dowload_url (url, fileName)
-
-parse_xml(fileName)
-update_citations()
-update_citation_count(AUTHOR)
-update_citation_count_all()
 
 # print articles
 for article in author_articles:
     article.show()
-
-#voor 2e ronde
-# article_sel=YES
-# jou_pick=NO #ALL
-# sort=CITATIONS # SCORE
